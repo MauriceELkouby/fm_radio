@@ -1,0 +1,12 @@
+workflows:
+  sample-workflow:
+    scripts:
+      - name: Set iOS deployment target to 13.0
+        script: |
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 9.0;/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/' ios/Runner.xcodeproj/project.pbxproj
+          echo "Updated iOS deployment target to 13.0"
+
+      - name: Install CocoaPods dependencies
+        script: |
+          cd ios
+          pod install
