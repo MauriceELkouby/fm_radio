@@ -1,5 +1,7 @@
 workflows:
   sample-workflow:
+    environment:
+      flutter: stable
     scripts:
       - name: Set iOS deployment target to 13.0
         script: |
@@ -20,3 +22,21 @@ workflows:
         script: |
           cd ios
           pod install
+
+      - name: Install Android dependencies
+        script: |
+          flutter pub get
+
+      - name: Build Android
+        script: |
+          flutter build apk
+
+      - name: Build iOS
+        script: |
+          flutter build ios --no-codesign
+
+      - name: Publish Artifacts (Optional)
+        script: |
+          mkdir -p build_outputs
+          mv build/app/outputs/flutter-apk/app-release.apk build_outputs/
+          echo "Artifacts moved for publishing"
