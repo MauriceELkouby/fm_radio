@@ -23,15 +23,18 @@ workflows:
           flutter build ios --no-codesign
           pod install --verbose
           cd ..
-          
+
       - name: Install Android dependencies
         script: |
           flutter pub get
+
       - name: Build iOS
         script: |
           cd ios
-          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath ../build/Runner.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+          xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist exportOptions.plist -exportPath ../build/ios/ipa
           cd ..
+      
       - name: Build Android
         script: |
           flutter build apk
@@ -39,5 +42,11 @@ workflows:
       - name: Publish Artifacts (Optional)
         script: |
           mkdir -p build_outputs
-          mv build/app/outputs/flutter-apk/app-release.apk build_outputs/
-          echo "Artifacts moved for publishing"
+          cp build/app/outputs/flutter-apk/app-release.apk build_outputs/
+          cp -r build/ios/ipa build_outputs/
+
+    artifacts:
+    - build_outputs/app-release.apk
+    - build/ios/ipa/*.ipa
+      echo "Artifacts copied for publishing"
+      
