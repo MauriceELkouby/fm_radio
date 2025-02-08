@@ -18,6 +18,8 @@ workflows:
           rm -rf Pods Podfile.lock
           flutter clean
           flutter pub get
+          pod deintegrate
+          pod setup
           flutter build ios --no-codesign
           pod install --verbose
           cd ..
@@ -33,7 +35,9 @@ workflows:
 
       - name: Build iOS
         script: |
-          flutter build ios --no-codesign
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+          cd ..
 
       - name: Publish Artifacts (Optional)
         script: |
