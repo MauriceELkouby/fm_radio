@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1051126909814",
+    "project_id": "fmradio-4bfc5",
+    "storage_bucket": "fmradio-4bfc5.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051126909814:android:2f73c37386d8c56a03c857",
+        "android_client_info": {
+          "package_name": "com.example.fm_radio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCeJYJUtHFO117BAKxGb3YLUmUzUZljl44"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
