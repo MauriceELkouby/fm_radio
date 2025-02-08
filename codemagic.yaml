@@ -5,18 +5,20 @@ workflows:
     scripts:
       - name: Set iOS deployment target to 13.0
         script: |
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 9.0;/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/' ios/Runner.xcodeproj/project.pbxproj
-          echo "Updated iOS deployment target to 13.0"
-
-      - name: Ensure Podfile exists
-        script: |
-          if [ ! -f ios/Podfile ]; then
-            cd ios
-            flutter clean
-            flutter pub get
-            flutter build ios --no-codesign
-            pod init
+          if [ -f ios/Podfile ]; then
+            sed -i '' 's/platform :ios, '9.0'/platform :ios, '13.0'/' ios/Podfile
+          else
+            echo "platform :ios, '13.0'" > ios/Podfile
           fi
+          echo "Updated Podfile to iOS 13.0"
+
+      - name: Ensure Podfile exists and install CocoaPods
+        script: |
+          cd ios
+          flutter clean
+          flutter pub get
+          flutter build ios --no-codesign
+          pod install
 
       - name: Install CocoaPods dependencies
         script: |
