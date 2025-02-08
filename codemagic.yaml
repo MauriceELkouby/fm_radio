@@ -1,12 +1,17 @@
 workflows:
-  sample-workflow:
+  android_and_ios:
+    name: Build Android and iOS
+    max_build_duration: 60
+    platform:
+      android: true
+      ios: true
     scripts:
       - name: Set iOS deployment target to 13.0
         script: |
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 9.0;/IPHONEOS_DEPLOYMENT_TARGET = 13.0;/' ios/Runner.xcodeproj/project.pbxproj
           echo "Updated iOS deployment target to 13.0"
 
-      - name: Ensure Podfile exists
+      - name: Ensure Podfile exists for iOS
         script: |
           if [ ! -f ios/Podfile ]; then
             cd ios
@@ -16,8 +21,26 @@ workflows:
             pod init
           fi
 
-      - name: Install CocoaPods dependencies
+      - name: Install CocoaPods dependencies for iOS
         script: |
           cd ios
           pod install
-    
+
+    # Build the Android app
+    android:
+      name: Build Android App
+      script: |
+        flutter build apk --release
+        flutter build appbundle --release
+      artifacts:
+        - build/app/outputs/flutter-apk/app-release.apk
+        - build/app/outputs/bundle/release/app-release.aab
+
+    # Build the iOS app
+    ios:
+      name: Build iOS App
+      script: |
+        flutter build ios --release --no-codesign
+      artifacts:
+        - build/ios/iphoneos/Runner.app
+        - build/ios/iphoneos/Runner.ipa
