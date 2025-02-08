@@ -12,18 +12,16 @@ workflows:
           fi
           echo "Updated Podfile to iOS 13.0"
 
-      - name: Ensure Podfile exists and install CocoaPods
+      - name: Ensure iOS workspace is properly generated
         script: |
           cd ios
+          rm -rf Pods Podfile.lock
           flutter clean
           flutter pub get
           flutter build ios --no-codesign
-          pod install
+          pod install --verbose
+          cd ..
 
-      - name: Install CocoaPods dependencies
-        script: |
-          cd ios
-          pod install
 
       - name: Install Android dependencies
         script: |
