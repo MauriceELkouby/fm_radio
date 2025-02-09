@@ -1,8 +1,5 @@
 platform :ios, '13.0'
 
-use_frameworks!
-use_modular_headers!
-
 # Ensure Flutter dependencies are set up properly
 flutter_export_env = File.expand_path(File.join('..', 'Flutter', 'flutter_export_environment'))
 require flutter_export_env if File.exist?(flutter_export_env)
@@ -12,8 +9,21 @@ require File.expand_path(File.join('..', 'Flutter', 'pods_flutter')) if File.exi
 pods_flutter = File.expand_path(File.join('..', 'Flutter', 'pods_flutter'))
 require pods_flutter if File.exist?(pods_flutter)
 
+use_frameworks!
+use_modular_headers!
+
 target 'Runner' do
-    require_relative '../Flutter/podhelper.rb'
-    flutter_ios_podfile_setup
+  # Add any necessary dependencies here
+  # Example for Firebase dependencies
+  pod 'Firebase/Analytics'
+  pod 'Firebase/Auth'
+  pod 'Firebase/Firestore' # Add others as needed
+
+  # Add any other CocoaPods dependencies your project requires
+  # pod 'AnotherLibrary', '~> 1.0.0'
+
+  # Ensure Flutter's Podfile helpers are set up
+  require_relative '../Flutter/podhelper.rb'
+  flutter_ios_podfile_setup
   install_all_flutter_pods(File.dirname(File.realpath(__FILE__)))
 end
