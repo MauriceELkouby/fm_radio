@@ -12,7 +12,14 @@ workflows:
             echo "platform :ios, '13.0'" > ios/Podfile
           fi
           echo "Updated Podfile to iOS 13.0"
-      
+
+      - name: Update Ruby and install CocoaPods
+        script: |
+          brew install ruby
+          export PATH="/usr/local/opt/ruby/bin:$PATH"
+          ruby -v  # Check if Ruby version is 3.1.0+
+          gem install cocoapods
+          pod --version  # Verify installation
 
       - name: Ensure Flutter dependencies are installed
         script: |
@@ -20,7 +27,7 @@ workflows:
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           echo "Flutter dependencies installed"
-
+      
       - name: Prepare iOS environment
         script: |
           sudo gem install cocoapods

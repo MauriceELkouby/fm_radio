@@ -8,6 +8,7 @@ flutter_export_env = File.expand_path(File.join('..', 'Flutter', 'flutter_export
 require flutter_export_env if File.exist?(flutter_export_env)
 
 # Include the default Flutter setup
+require File.expand_path(File.join('..', 'Flutter', 'pods_flutter')) if File.exist?(File.expand_path(File.join('..', 'Flutter', 'pods_flutter')))
 pods_flutter = File.expand_path(File.join('..', 'Flutter', 'pods_flutter'))
 require pods_flutter if File.exist?(pods_flutter)
 
