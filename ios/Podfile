@@ -13,6 +13,5 @@ pods_flutter = File.expand_path(File.join('..', 'Flutter', 'pods_flutter'))
 require pods_flutter if File.exist?(pods_flutter)
 
 target 'Runner' do
-  flutter_ios_podfile_setup
   install_all_flutter_pods(File.dirname(File.realpath(__FILE__)))
 end
