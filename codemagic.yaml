@@ -16,8 +16,11 @@ workflows:
       - name: Update Ruby and install CocoaPods
         script: |
           brew install ruby
-          export PATH="/usr/local/opt/ruby/bin:$PATH"
-          ruby -v  # Check if Ruby version is 3.1.0+
+          export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
+          echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
+          ruby -v  # Ensure Ruby is updated
+          gem install bundler
+          gem install securerandom -v 0.3.2
           gem install cocoapods
           pod --version  # Verify installation
 
@@ -27,7 +30,7 @@ workflows:
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           echo "Flutter dependencies installed"
-      
+
       - name: Prepare iOS environment
         script: |
           sudo gem install cocoapods
