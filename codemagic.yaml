@@ -3,7 +3,7 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: stable
+      cocoapods: 1.16.2  # Explicit version instead of 'stable'
 
     scripts:
       # Set iOS deployment target to 13.0
@@ -16,36 +16,12 @@ workflows:
           fi
           echo "Updated Podfile to iOS 13.0"
 
-      # Ensure Ruby is installed and up-to-date (only if necessary)
-      - name: Check Ruby Version Before Update
-        script: |
-          ruby -v
-          which ruby
-
-      - name: Install and Use Ruby 3.1+
-        script: |
-          brew install rbenv
-          rbenv install 3.3.6
-          rbenv global 3.3.6
-          echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
-          echo 'eval "$(rbenv init -)"' >> ~/.bashrc
-          source ~/.bashrc
-          ruby -v  # Confirm Ruby version
-
-      # Install CocoaPods if necessary
+      # Install Latest CocoaPods
       - name: Install CocoaPods
         script: |
-          gem install bundler
-          gem install securerandom -v 0.3.2
-          gem install cocoapods
-          pod --version
-
-      # Ensure CocoaPods is installed
-      - name: Ensure CocoaPods is Installed
-        script: |
-          pod --version || gem install cocoapods
-          echo "CocoaPods version:"
-          pod --version
+          sudo gem uninstall cocoapods --executables --all || true
+          sudo gem install cocoapods -v 1.16.2
+          pod repo update
 
       # Install Flutter dependencies
       - name: Ensure Flutter dependencies are installed
@@ -61,18 +37,17 @@ workflows:
           cd ios
           rm -rf Pods Podfile.lock
           pod deintegrate
-          pod setup
           cd ..
           echo "iOS environment prepared"
 
-      # Generate iOS workspace and fix missing environment files
+      # Generate iOS workspace
       - name: Generate iOS workspace and fix missing environment files
         script: |
           cd ios
           flutter build ios --no-codesign
-          [ -f Flutter/flutter_export_environment ] || touch Flutter/flutter_export_environment
+          [ -f Flutter/flutter_export_environment.sh ] || touch Flutter/flutter_export_environment.sh
           echo "Checked flutter_export_environment file"
-          pod install --verbose
+          pod install --repo-update --verbose
           cd ..
           echo "iOS workspace setup completed"
 
@@ -100,7 +75,7 @@ workflows:
         script: |
           mkdir -p build_outputs
           cp build/app/outputs/flutter-apk/app-release.apk build_outputs/
-          cp -r build/ios/ipa/*.ipa build_outputs/
+          [ -d build/ios/ipa ] && cp -r build/ios/ipa/*.ipa build_outputs/
           echo "Artifacts copied for publishing"
 
     artifacts:
