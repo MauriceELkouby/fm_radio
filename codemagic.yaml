@@ -7,10 +7,11 @@ workflows:
 
     scripts:
       # Use System Ruby to prevent install failures
-      - name: Use System Ruby
+      - name: Use System Ruby 3.1+
         script: |
-          export PATH="/usr/bin:$PATH"
-          ruby -v
+          eval "$(rbenv init -)"
+          rbenv global 3.3.6 || rbenv install 3.3.6
+          ruby -v  # ✅ Verify Ruby version
 
       # Install CocoaPods
       - name: Install CocoaPods
