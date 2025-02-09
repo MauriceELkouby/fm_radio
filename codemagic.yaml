@@ -2,17 +2,21 @@ workflows:
   sample-workflow:
     environment:
       flutter: stable
+      xcode: latest
+      cocoapods: stable
 
     scripts:
+      # Set iOS deployment target to 13.0
       - name: Set iOS deployment target to 13.0
         script: |
           if [ -f ios/Podfile ]; then
-            sed -i '' "s/platform :ios, '9.0'/platform :ios, '13.0'/" ios/Podfile
+            sed -i '' "s/platform :ios, '[^']*'/platform :ios, '13.0'/" ios/Podfile
           else
             echo "platform :ios, '13.0'" > ios/Podfile
           fi
           echo "Updated Podfile to iOS 13.0"
 
+      # Ensure Ruby is installed and up-to-date (only if necessary)
       - name: Check Ruby Version Before Update
         script: |
           ruby -v
@@ -28,6 +32,7 @@ workflows:
           source ~/.bashrc
           ruby -v  # Confirm Ruby version
 
+      # Install CocoaPods if necessary
       - name: Install CocoaPods
         script: |
           gem install bundler
@@ -35,6 +40,14 @@ workflows:
           gem install cocoapods
           pod --version
 
+      # Ensure CocoaPods is installed
+      - name: Ensure CocoaPods is Installed
+        script: |
+          pod --version || gem install cocoapods
+          echo "CocoaPods version:"
+          pod --version
+
+      # Install Flutter dependencies
       - name: Ensure Flutter dependencies are installed
         script: |
           flutter clean
@@ -42,6 +55,7 @@ workflows:
           flutter pub run build_runner build --delete-conflicting-outputs
           echo "Flutter dependencies installed"
 
+      # Prepare iOS environment
       - name: Prepare iOS environment
         script: |
           cd ios
@@ -51,6 +65,7 @@ workflows:
           cd ..
           echo "iOS environment prepared"
 
+      # Generate iOS workspace and fix missing environment files
       - name: Generate iOS workspace and fix missing environment files
         script: |
           cd ios
@@ -61,6 +76,7 @@ workflows:
           cd ..
           echo "iOS workspace setup completed"
 
+      # Build iOS IPA
       - name: Build iOS
         script: |
           cd ios
@@ -73,11 +89,13 @@ workflows:
           cd ..
           echo "iOS IPA build completed"
 
+      # Build Android APK
       - name: Build Android (APK)
         script: |
           flutter build apk
           echo "Android APK build completed"
 
+      # Publish Artifacts
       - name: Publish Artifacts
         script: |
           mkdir -p build_outputs
