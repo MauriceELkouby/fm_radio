@@ -15,25 +15,32 @@ workflows:
 
       - name: Ensure iOS workspace is properly generated
         script: |
+          sudo gem install cocoapods
+          flutter pub get
+          flutter pub run build_runner build --delete-conflicting-outputs
           cd ios
           rm -rf Pods Podfile.lock
-          flutter clean
-          flutter pub get
           pod deintegrate
           pod setup
+          flutter clean
+          flutter pub get
           pod install --verbose
           cd ..
 
       - name: Install Android dependencies
         script: |
           flutter pub get
-
+      
       - name: Build iOS
         script: |
           cd ios
           flutter build ios --no-codesign
-          xcodebuild -scheme Runner -sdk iphoneos -configuration Release archive -archivePath ../build/Runner.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-          xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist ./exportOptions.plist -exportPath ../build/ios/ipa
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath ../build/Runner.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO | xcpretty
+          if [ ! -d "../build/Runner.xcarchive" ]; then
+            echo "Xcode archive failed: Archive not found!"
+            exit 1
+          fi
+          xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist ./exportOptions.plist -exportPath ../build/ios/ipa | xcpretty
           cd ..
           echo "iOS IPA build completed"
 
