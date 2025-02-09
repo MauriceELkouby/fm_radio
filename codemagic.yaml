@@ -13,28 +13,38 @@ workflows:
           fi
           echo "Updated Podfile to iOS 13.0"
 
-      - name: Ensure iOS workspace is properly generated
+      - name: Ensure Flutter dependencies are installed
         script: |
-          sudo gem install cocoapods
+          flutter clean
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
+          echo "Flutter dependencies installed"
+
+      - name: Prepare iOS environment
+        script: |
+          sudo gem install cocoapods
           cd ios
           rm -rf Pods Podfile.lock
           pod deintegrate
           pod setup
-          flutter clean
-          flutter pub get
+          cd ..
+          echo "iOS environment prepared"
+
+      - name: Generate iOS workspace and fix missing environment files
+        script: |
+          cd ios
+          flutter build ios --no-codesign
+          if [ ! -f Flutter/flutter_export_environment ]; then
+            touch Flutter/flutter_export_environment
+            echo "Created missing flutter_export_environment file"
+          fi
           pod install --verbose
           cd ..
-
-      - name: Install Android dependencies
-        script: |
-          flutter pub get
+          echo "iOS workspace setup completed"
 
       - name: Build iOS
         script: |
           cd ios
-          flutter build ios --no-codesign
           xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath ../build/Runner.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO | xcpretty
           if [ ! -d "../build/Runner.xcarchive" ]; then
             echo "Xcode archive failed: Archive not found!"
@@ -58,4 +68,4 @@ workflows:
 
     artifacts:
       - build_outputs/app-release.apk
-      - build_outputs/*.ipas
+      - build_outputs/*.ipa

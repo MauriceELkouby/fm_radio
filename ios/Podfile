@@ -4,11 +4,12 @@ use_frameworks!
 use_modular_headers!
 
 # Ensure Flutter dependencies are set up properly
-require File.expand_path('../flutter_export_environment', __FILE__) if File.exist?(File.expand_path('../flutter_export_environment', __FILE__))
-require File.expand_path(File.join('..', 'Flutter', 'flutter_export_environment'))
+flutter_export_env = File.expand_path(File.join('..', 'Flutter', 'flutter_export_environment'))
+require flutter_export_env if File.exist?(flutter_export_env)
 
 # Include the default Flutter setup
-require File.expand_path(File.join('..', 'Flutter', 'pods_flutter'), __FILE__)
+pods_flutter = File.expand_path(File.join('..', 'Flutter', 'pods_flutter'))
+require pods_flutter if File.exist?(pods_flutter)
 
 target 'Runner' do
   flutter_ios_podfile_setup
