@@ -54,17 +54,24 @@ workflows:
           cd ..
           echo "iOS environment prepared"
 
-      # Generate iOS workspace
-      - name: Ensure iOS workspace is created
+      - name: Ensure Podfile has dependencies
         script: |
-          cd ios
-          pod install --repo-update
-          if [ ! -f "Runner.xcworkspace" ]; then
-            echo "❌ Missing xcworkspace! Pod installation failed."
-            exit 1
-          fi
-          cd ..
-          echo "iOS workspace setup completed"
+          echo "Checking Podfile..."
+          if [ -f ios/Podfile ]; then
+            echo "Podfile exists, updating platform..."
+            sed -i '' "s/platform :ios, '[^']*'/platform :ios, '13.0'/" ios/Podfile
+          else
+            echo "Podfile missing, creating new one..."
+            cat > ios/Podfile <<EOF
+            platform :ios, '13.0'
+            target 'Runner' do
+            use_frameworks!
+            use_modular_headers!
+            flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+            end
+            EOF
+            fi
+            cat ios/Podfile  # ✅ Confirm Podfile contents
 
       # Build iOS IPA
       - name: Build iOS
