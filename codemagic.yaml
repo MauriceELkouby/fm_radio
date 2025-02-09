@@ -32,8 +32,8 @@ workflows:
       - name: Build iOS (IPA)
         script: |
           cd ios
-          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath ../build/Runner.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-          xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist ../ios/exportOptions.plist -exportPath ../build/ios/ipa
+          xcodebuild -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+          xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportOptionsPlist ios/exportOptions.plist -exportPath build/ios/ipa
           cd ..
           echo "iOS IPA build completed"
 
@@ -51,4 +51,4 @@ workflows:
 
     artifacts:
       - build_outputs/app-release.apk
-      - build_outputs/*.ipa
+      - build_outputs/*.ipas
