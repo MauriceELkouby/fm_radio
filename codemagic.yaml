@@ -13,16 +13,27 @@ workflows:
           fi
           echo "Updated Podfile to iOS 13.0"
 
-      - name: Update Ruby and install CocoaPods
+      - name: Check Ruby Version Before Update
         script: |
-          brew install ruby
-          export PATH="/opt/homebrew/opt/ruby/bin:$PATH"
-          echo 'export PATH="/opt/homebrew/opt/ruby/bin:$PATH"' >> ~/.zshrc
-          ruby -v  # Ensure Ruby is updated
+          ruby -v
+          which ruby
+
+      - name: Install and Use Ruby 3.1+
+        script: |
+          brew install rbenv
+          rbenv install 3.1.4
+          rbenv global 3.1.4
+          echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bashrc
+          echo 'eval "$(rbenv init -)"' >> ~/.bashrc
+          source ~/.bashrc
+          ruby -v  # Confirm Ruby version
+
+      - name: Install CocoaPods
+        script: |
           gem install bundler
           gem install securerandom -v 0.3.2
           gem install cocoapods
-          pod --version  # Verify installation
+          pod --version
 
       - name: Ensure Flutter dependencies are installed
         script: |
@@ -33,7 +44,6 @@ workflows:
 
       - name: Prepare iOS environment
         script: |
-          sudo gem install cocoapods
           cd ios
           rm -rf Pods Podfile.lock
           pod deintegrate
@@ -45,10 +55,8 @@ workflows:
         script: |
           cd ios
           flutter build ios --no-codesign
-          if [ ! -f Flutter/flutter_export_environment ]; then
-            touch Flutter/flutter_export_environment
-            echo "Created missing flutter_export_environment file"
-          fi
+          [ -f Flutter/flutter_export_environment ] || touch Flutter/flutter_export_environment
+          echo "Checked flutter_export_environment file"
           pod install --verbose
           cd ..
           echo "iOS workspace setup completed"
@@ -64,7 +72,6 @@ workflows:
           xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist ./exportOptions.plist -exportPath ../build/ios/ipa | xcpretty
           cd ..
           echo "iOS IPA build completed"
-      
 
       - name: Build Android (APK)
         script: |
