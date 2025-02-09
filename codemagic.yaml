@@ -31,12 +31,18 @@ workflows:
           flutter pub run build_runner build --delete-conflicting-outputs
           echo "Flutter dependencies installed"
 
+      # Inject exportOptions.plist
+      - name: Add exportOptions.plist
+        script: |
+          echo $EXPORT_OPTIONS | base64 --decode > ios/exportOptions.plist
+
       # Prepare iOS environment
       - name: Prepare iOS environment
         script: |
           cd ios
           rm -rf Pods Podfile.lock
           pod deintegrate
+          pod install --repo-update --verbose
           cd ..
           echo "iOS environment prepared"
 
@@ -44,10 +50,8 @@ workflows:
       - name: Generate iOS workspace and fix missing environment files
         script: |
           cd ios
-          flutter build ios --no-codesign
-          [ -f Flutter/flutter_export_environment.sh ] || touch Flutter/flutter_export_environment.sh
+          [ -f ios/Flutter/flutter_export_environment.sh ] || touch ios/Flutter/flutter_export_environment.sh
           echo "Checked flutter_export_environment file"
-          pod install --repo-update --verbose
           cd ..
           echo "iOS workspace setup completed"
 
@@ -57,12 +61,14 @@ workflows:
           cd ios
           xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release \
             -destination 'generic/platform=iOS' \
-            archive -archivePath ../build/Runner.xcarchive | xcpretty
-          if [ ! -d "../build/Runner.xcarchive" ]; then
+            CODE_SIGN_STYLE=Automatic \
+            archive -archivePath $CM_BUILD_DIR/build/Runner.xcarchive | xcpretty
+          if [ ! -d "$CM_BUILD_DIR/build/Runner.xcarchive" ]; then
             echo "Xcode archive failed: Archive not found!"
             exit 1
           fi
-          xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist ./exportOptions.plist -exportPath ../build/ios/ipa | xcpretty
+          xcodebuild -exportArchive -archivePath $CM_BUILD_DIR/build/Runner.xcarchive \
+            -exportOptionsPlist ./exportOptions.plist -exportPath $CM_BUILD_DIR/build/ios/ipa | xcpretty
           cd ..
           echo "iOS IPA build completed"
       
