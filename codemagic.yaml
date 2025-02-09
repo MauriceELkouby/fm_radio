@@ -6,28 +6,34 @@ workflows:
       cocoapods: 1.16.2
 
     scripts:
-      # Force Codemagic to use Ruby 3.1+ to fix CocoaPods issues
-      - name: Use System Ruby 3.1+
+      # Use system Ruby (avoid installing manually)
+      - name: Use System Ruby
         script: |
-          eval "$(rbenv init -)"
-          rbenv global 3.1.0 || rbenv install 3.1.0
-          ruby -v  # ✅ Verify Ruby version
+          ruby -v  # ✅ Check system Ruby version
 
-      # Ensure iOS Deployment Target is set to 13.0 in Podfile
-      - name: Set iOS Deployment Target to 13.0
+      # Ensure Podfile contains dependencies
+      - name: Ensure Podfile has dependencies
         script: |
+          echo "Checking Podfile..."
           if [ -f ios/Podfile ]; then
+            echo "Podfile exists, updating platform..."
             sed -i '' "s/platform :ios, '[^']*'/platform :ios, '13.0'/" ios/Podfile
           else
-            echo "platform :ios, '13.0'" > ios/Podfile
+            echo "Podfile missing, creating new one..."
+            cat > ios/Podfile <<EOF
+            platform :ios, '13.0'
+            target 'Runner' do
+              use_frameworks!
+              use_modular_headers!
+              flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+            end
+            EOF
           fi
-          cat ios/Podfile  # ✅ Print Podfile to confirm change
-          echo "Updated Podfile to iOS 13.0"
+          cat ios/Podfile  # ✅ Confirm Podfile contents
 
       # Install CocoaPods
       - name: Install CocoaPods
         script: |
-          gem install securerandom -v 0.3.2 || true  # ✅ Fix "securerandom" dependency error
           gem install cocoapods -v 1.16.2
           pod repo update
 
@@ -36,7 +42,6 @@ workflows:
         script: |
           flutter clean
           flutter pub get
-          flutter pub run build_runner build --delete-conflicting-outputs
           echo "Flutter dependencies installed"
 
       # Clean and Reinstall CocoaPods
@@ -49,14 +54,15 @@ workflows:
           cd ..
           echo "iOS environment prepared"
 
-      # Ensure iOS Workspace is Generated
-      - name: Generate iOS workspace
+      # Generate iOS workspace
+      - name: Ensure iOS workspace is created
         script: |
           cd ios
           pod install --repo-update
-          [ -f "Runner.xcworkspace" ] || echo "Missing xcworkspace!"
-          [ -f Flutter/flutter_export_environment.sh ] || touch Flutter/flutter_export_environment.sh
-          echo "Checked flutter_export_environment file"
+          if [ ! -f "Runner.xcworkspace" ]; then
+            echo "❌ Missing xcworkspace! Pod installation failed."
+            exit 1
+          fi
           cd ..
           echo "iOS workspace setup completed"
 
@@ -69,19 +75,19 @@ workflows:
             CODE_SIGN_STYLE=Automatic \
             archive -archivePath $CM_BUILD_DIR/build/Runner.xcarchive | xcpretty
           if [ ! -d "$CM_BUILD_DIR/build/Runner.xcarchive" ]; then
-            echo "Xcode archive failed: Archive not found!"
+            echo "❌ Xcode archive failed: Archive not found!"
             exit 1
           fi
           xcodebuild -exportArchive -archivePath $CM_BUILD_DIR/build/Runner.xcarchive \
             -exportOptionsPlist ./exportOptions.plist -exportPath $CM_BUILD_DIR/build/ios/ipa | xcpretty
           cd ..
-          echo "iOS IPA build completed"
+          echo "✅ iOS IPA build completed"
 
       # Build Android APK
       - name: Build Android (APK)
         script: |
           flutter build apk
-          echo "Android APK build completed"
+          echo "✅ Android APK build completed"
 
       # Publish Artifacts
       - name: Publish Artifacts
@@ -89,7 +95,7 @@ workflows:
           mkdir -p build_outputs
           cp build/app/outputs/flutter-apk/app-release.apk build_outputs/
           [ -d build/ios/ipa ] && cp -r build/ios/ipa/*.ipa build_outputs/
-          echo "Artifacts copied for publishing"
+          echo "✅ Artifacts copied for publishing"
 
     artifacts:
       - build_outputs/app-release.apk
