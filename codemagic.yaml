@@ -11,21 +11,38 @@ workflows:
         script: |
           ruby -v  # ✅ Check system Ruby version
 
-      # Ensure iOS dependencies are generated before running CocoaPods
-      - name: Ensure Flutter generates iOS dependencies
+      # Ensure Podfile contains dependencies
+      - name: Ensure Podfile has dependencies
         script: |
-          flutter pub get
-          flutter pub run flutter_plugin_tools podspecs
-          cd ios
-          flutter build ios --no-codesign  # ✅ This regenerates the Podfile correctly
-          cd ..
-          echo "Flutter iOS dependencies generated"
+          echo "Checking Podfile..."
+          if [ -f ios/Podfile ]; then
+            echo "Podfile exists, updating platform..."
+            sed -i '' "s/platform :ios, '[^']*'/platform :ios, '13.0'/" ios/Podfile
+          else
+            echo "Podfile missing, creating new one..."
+            cat > ios/Podfile <<EOF
+            platform :ios, '13.0'
+            target 'Runner' do
+              use_frameworks!
+              use_modular_headers!
+              flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+            end
+            EOF
+          fi
+          cat ios/Podfile  # ✅ Confirm Podfile contents
 
       # Install CocoaPods
       - name: Install CocoaPods
         script: |
           gem install cocoapods -v 1.16.2
           pod repo update
+
+      # Install Flutter dependencies
+      - name: Ensure Flutter dependencies are installed
+        script: |
+          flutter clean
+          flutter pub get
+          echo "Flutter dependencies installed"
 
       # Clean and Reinstall CocoaPods
       - name: Prepare iOS environment
@@ -37,7 +54,7 @@ workflows:
           cd ..
           echo "iOS environment prepared"
 
-      # Ensure iOS Workspace is Generated
+      # Generate iOS workspace
       - name: Ensure iOS workspace is created
         script: |
           cd ios
