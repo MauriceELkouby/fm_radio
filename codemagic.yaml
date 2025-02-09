@@ -3,19 +3,14 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-      ruby: 3.1.0  # Ensure Ruby 3.1.0+ for CocoaPods compatibility
-      cocoapods: 1.16.2
+      cocoapods: 1.16.2  # ✅ Ensure CocoaPods is installed properly
 
     scripts:
-      # Set iOS deployment target
-      - name: Set iOS deployment target to 13.0
+      # Use System Ruby to prevent install failures
+      - name: Use System Ruby
         script: |
-          if [ -f ios/Podfile ]; then
-            sed -i '' "s/platform :ios, '[^']*'/platform :ios, '13.0'/" ios/Podfile
-          else
-            echo "platform :ios, '13.0'" > ios/Podfile
-          fi
-          echo "Updated Podfile to iOS 13.0"
+          export PATH="/usr/bin:$PATH"
+          ruby -v
 
       # Install CocoaPods
       - name: Install CocoaPods
@@ -30,11 +25,6 @@ workflows:
           flutter pub get
           flutter pub run build_runner build --delete-conflicting-outputs
           echo "Flutter dependencies installed"
-
-      # Inject exportOptions.plist
-      - name: Add exportOptions.plist
-        script: |
-          echo $EXPORT_OPTIONS | base64 --decode > ios/exportOptions.plist
 
       # Prepare iOS environment
       - name: Prepare iOS environment
