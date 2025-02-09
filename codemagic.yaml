@@ -63,13 +63,13 @@ workflows:
           else
             echo "Podfile missing, creating new one..."
             cat > ios/Podfile <<EOF
-            platform :ios, '13.0'
-            target 'Runner' do
-            use_frameworks!
-            use_modular_headers!
-            flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-            end
-            EOF
+  platform :ios, '13.0'
+  target 'Runner' do
+  use_frameworks!
+  use_modular_headers!
+  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
+  end
+  EOF
             fi
             cat ios/Podfile  # ✅ Confirm Podfile contents
 
