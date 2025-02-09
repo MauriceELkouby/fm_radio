@@ -3,10 +3,11 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: 1.16.2  # Explicit version instead of 'stable'
+      ruby: 3.1.0  # Ensure Ruby 3.1.0+ for CocoaPods compatibility
+      cocoapods: 1.16.2
 
     scripts:
-      # Set iOS deployment target to 13.0
+      # Set iOS deployment target
       - name: Set iOS deployment target to 13.0
         script: |
           if [ -f ios/Podfile ]; then
@@ -16,10 +17,9 @@ workflows:
           fi
           echo "Updated Podfile to iOS 13.0"
 
-      # Install Latest CocoaPods
+      # Install CocoaPods
       - name: Install CocoaPods
         script: |
-          sudo gem uninstall cocoapods --executables --all || true
           sudo gem install cocoapods -v 1.16.2
           pod repo update
 
@@ -42,7 +42,7 @@ workflows:
           cd ios
           rm -rf Pods Podfile.lock
           pod deintegrate
-          pod install --repo-update --verbose
+          pod install --repo-update
           cd ..
           echo "iOS environment prepared"
 
@@ -50,7 +50,9 @@ workflows:
       - name: Generate iOS workspace and fix missing environment files
         script: |
           cd ios
-          [ -f ios/Flutter/flutter_export_environment.sh ] || touch ios/Flutter/flutter_export_environment.sh
+          pod install --repo-update
+          [ -f "Runner.xcworkspace" ] || echo "Missing xcworkspace!"
+          [ -f Flutter/flutter_export_environment.sh ] || touch Flutter/flutter_export_environment.sh
           echo "Checked flutter_export_environment file"
           cd ..
           echo "iOS workspace setup completed"
@@ -71,7 +73,6 @@ workflows:
             -exportOptionsPlist ./exportOptions.plist -exportPath $CM_BUILD_DIR/build/ios/ipa | xcpretty
           cd ..
           echo "iOS IPA build completed"
-      
 
       # Build Android APK
       - name: Build Android (APK)
