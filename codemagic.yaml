@@ -2,6 +2,7 @@ workflows:
   sample-workflow:
     environment:
       flutter: stable
+
     scripts:
       - name: Set iOS deployment target to 13.0
         script: |
@@ -28,25 +29,26 @@ workflows:
         script: |
           flutter pub get
 
-      - name: Build iOS
+      - name: Build iOS (IPA)
         script: |
           cd ios
           xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath ../build/Runner.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-          xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist exportOptions.plist -exportPath ../build/ios/ipa
+          xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist ../ios/exportOptions.plist -exportPath ../build/ios/ipa
           cd ..
-      
-      - name: Build Android
+          echo "iOS IPA build completed"
+
+      - name: Build Android (APK)
         script: |
           flutter build apk
+          echo "Android APK build completed"
 
-      - name: Publish Artifacts (Optional)
+      - name: Publish Artifacts
         script: |
           mkdir -p build_outputs
           cp build/app/outputs/flutter-apk/app-release.apk build_outputs/
-          cp -r build/ios/ipa build_outputs/
+          cp -r build/ios/ipa/*.ipa build_outputs/
+          echo "Artifacts copied for publishing"
 
     artifacts:
-    - build_outputs/app-release.apk
-    - build/ios/ipa/*.ipa
-      echo "Artifacts copied for publishing"
-      
+      - build_outputs/app-release.apk
+      - build_outputs/*.ipa
