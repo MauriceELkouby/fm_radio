@@ -55,7 +55,9 @@ workflows:
       - name: Build iOS
         script: |
           cd ios
-          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release archive -archivePath ../build/Runner.xcarchive | xcpretty
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release \
+            -destination 'generic/platform=iOS' \
+            archive -archivePath ../build/Runner.xcarchive | xcpretty
           if [ ! -d "../build/Runner.xcarchive" ]; then
             echo "Xcode archive failed: Archive not found!"
             exit 1
@@ -63,6 +65,7 @@ workflows:
           xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist ./exportOptions.plist -exportPath ../build/ios/ipa | xcpretty
           cd ..
           echo "iOS IPA build completed"
+      
 
       # Build Android APK
       - name: Build Android (APK)
