@@ -3,20 +3,32 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: 1.16.2  # ✅ Ensure CocoaPods is installed properly
+      cocoapods: 1.16.2
 
     scripts:
-      # Use System Ruby to prevent install failures
+      # Force Codemagic to use Ruby 3.1+ to fix CocoaPods issues
       - name: Use System Ruby 3.1+
         script: |
           eval "$(rbenv init -)"
-          rbenv global 3.3.6 || rbenv install 3.3.6
+          rbenv global 3.1.0 || rbenv install 3.1.0
           ruby -v  # ✅ Verify Ruby version
+
+      # Ensure iOS Deployment Target is set to 13.0 in Podfile
+      - name: Set iOS Deployment Target to 13.0
+        script: |
+          if [ -f ios/Podfile ]; then
+            sed -i '' "s/platform :ios, '[^']*'/platform :ios, '13.0'/" ios/Podfile
+          else
+            echo "platform :ios, '13.0'" > ios/Podfile
+          fi
+          cat ios/Podfile  # ✅ Print Podfile to confirm change
+          echo "Updated Podfile to iOS 13.0"
 
       # Install CocoaPods
       - name: Install CocoaPods
         script: |
-          sudo gem install cocoapods -v 1.16.2
+          gem install securerandom -v 0.3.2 || true  # ✅ Fix "securerandom" dependency error
+          gem install cocoapods -v 1.16.2
           pod repo update
 
       # Install Flutter dependencies
@@ -27,18 +39,18 @@ workflows:
           flutter pub run build_runner build --delete-conflicting-outputs
           echo "Flutter dependencies installed"
 
-      # Prepare iOS environment
+      # Clean and Reinstall CocoaPods
       - name: Prepare iOS environment
         script: |
           cd ios
-          rm -rf Pods Podfile.lock
+          rm -rf Pods Podfile.lock Runner.xcworkspace
           pod deintegrate
           pod install --repo-update
           cd ..
           echo "iOS environment prepared"
 
-      # Generate iOS workspace
-      - name: Generate iOS workspace and fix missing environment files
+      # Ensure iOS Workspace is Generated
+      - name: Generate iOS workspace
         script: |
           cd ios
           pod install --repo-update
