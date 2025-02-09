@@ -21,7 +21,6 @@ workflows:
           flutter pub get
           pod deintegrate
           pod setup
-          flutter build ios --no-codesign
           pod install --verbose
           cd ..
 
@@ -29,11 +28,12 @@ workflows:
         script: |
           flutter pub get
 
-      - name: Build iOS (IPA)
+      - name: Build iOS
         script: |
           cd ios
-          xcodebuild -scheme Runner -sdk iphoneos -configuration Release archive -archivePath build/Runner.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-          xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportOptionsPlist ios/exportOptions.plist -exportPath build/ios/ipa
+          flutter build ios --no-codesign
+          xcodebuild -scheme Runner -sdk iphoneos -configuration Release archive -archivePath ../build/Runner.xcarchive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+          xcodebuild -exportArchive -archivePath ../build/Runner.xcarchive -exportOptionsPlist ./exportOptions.plist -exportPath ../build/ios/ipa
           cd ..
           echo "iOS IPA build completed"
 
