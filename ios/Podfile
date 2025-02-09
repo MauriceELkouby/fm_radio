@@ -3,6 +3,13 @@ platform :ios, '13.0'
 use_frameworks!
 use_modular_headers!
 
+# Ensure Flutter dependencies are set up properly
+require File.expand_path('../flutter_export_environment', __FILE__) if File.exist?(File.expand_path('../flutter_export_environment', __FILE__))
+require File.expand_path(File.join('..', 'Flutter', 'flutter_export_environment'))
+
+# Include the default Flutter setup
+require File.expand_path(File.join('..', 'Flutter', 'pods_flutter'), __FILE__)
+
 target 'Runner' do
   flutter_ios_podfile_setup
   install_all_flutter_pods(File.dirname(File.realpath(__FILE__)))

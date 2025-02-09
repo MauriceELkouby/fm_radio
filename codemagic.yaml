@@ -30,7 +30,7 @@ workflows:
       - name: Install Android dependencies
         script: |
           flutter pub get
-      
+
       - name: Build iOS
         script: |
           cd ios
