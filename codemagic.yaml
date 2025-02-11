@@ -1,109 +1,32 @@
 workflows:
-  sample-workflow:
+  ios-ipa:
+    name: iOS IPA Build
+    max_build_duration: 120
     environment:
       flutter: stable
       xcode: latest
-      cocoapods: 1.16.2
-
+      cocoapods: default
+      groups:
+        - signing_credentials
+      ios_signing:
+        distribution_type: ad_hoc  # Change to development if testing locally
+        bundle_identifier: "com.yourcompany.yourapp"
     scripts:
-      # Use system Ruby (avoid installing manually)
-      - name: Use System Ruby
+      - name: Install dependencies
         script: |
-          ruby -v  # ✅ Check system Ruby version
-
-      # Ensure Podfile contains dependencies
-      - name: Ensure Podfile has dependencies
-        script: |
-          echo "Checking Podfile..."
-          if [ -f ios/Podfile ]; then
-            echo "Podfile exists, updating platform..."
-            sed -i '' "s/platform :ios, '[^']*'/platform :ios, '13.0'/" ios/Podfile
-          else
-            echo "Podfile missing, creating new one..."
-            cat > ios/Podfile <<EOF
-            platform :ios, '13.0'
-            target 'Runner' do
-              use_frameworks!
-              use_modular_headers!
-              flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-            end
-            EOF
-          fi
-          cat ios/Podfile  # ✅ Confirm Podfile contents
-
-      # Install CocoaPods
-      - name: Install CocoaPods
-        script: |
-          gem install cocoapods -v 1.16.2
-          pod repo update
-
-      # Install Flutter dependencies
-      - name: Ensure Flutter dependencies are installed
-        script: |
-          flutter clean
           flutter pub get
-          echo "Flutter dependencies installed"
-
-      # Clean and Reinstall CocoaPods
-      - name: Prepare iOS environment
+      - name: Flutter build
         script: |
-          cd ios
-          rm -rf Pods Podfile.lock Runner.xcworkspace
-          pod deintegrate
-          pod install --repo-update
-          cd ..
-          echo "iOS environment prepared"
-
-      - name: Ensure Podfile has dependencies
+          flutter build ios --release --no-codesign
+      - name: Set up keychain
         script: |
-          echo "Checking Podfile..."
-          if [ -f ios/Podfile ]; then
-            echo "Podfile exists, updating platform..."
-            sed -i '' "s/platform :ios, '[^']*'/platform :ios, '13.0'/" ios/Podfile
-          else
-            echo "Podfile missing, creating new one..."
-            cat > ios/Podfile <<EOF
-  platform :ios, '13.0'
-  target 'Runner' do
-  use_frameworks!
-  use_modular_headers!
-  flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
-  end
-  EOF
-            fi
-            cat ios/Podfile  # ✅ Confirm Podfile contents
-
-      # Build iOS IPA
-      - name: Build iOS
+          keychain initialize
+      - name: Fetch signing files
         script: |
-          cd ios
-          xcodebuild -workspace Runner.xcworkspace -scheme Runner -sdk iphoneos -configuration Release \
-            -destination 'generic/platform=iOS' \
-            CODE_SIGN_STYLE=Automatic \
-            archive -archivePath $CM_BUILD_DIR/build/Runner.xcarchive | xcpretty
-          if [ ! -d "$CM_BUILD_DIR/build/Runner.xcarchive" ]; then
-            echo "❌ Xcode archive failed: Archive not found!"
-            exit 1
-          fi
-          xcodebuild -exportArchive -archivePath $CM_BUILD_DIR/build/Runner.xcarchive \
-            -exportOptionsPlist ./exportOptions.plist -exportPath $CM_BUILD_DIR/build/ios/ipa | xcpretty
-          cd ..
-          echo "✅ iOS IPA build completed"
-
-      # Build Android APK
-      - name: Build Android (APK)
+          app-store-connect fetch-signing-files "com.yourcompany.yourapp" --type IOS_APP_ADHOC
+      - name: Build iOS IPA
         script: |
-          flutter build apk
-          echo "✅ Android APK build completed"
-
-      # Publish Artifacts
-      - name: Publish Artifacts
-        script: |
-          mkdir -p build_outputs
-          cp build/app/outputs/flutter-apk/app-release.apk build_outputs/
-          [ -d build/ios/ipa ] && cp -r build/ios/ipa/*.ipa build_outputs/
-          echo "✅ Artifacts copied for publishing"
-
+          xcode-project use-profiles
+          xcode-project build-ipa --workspace="ios/Runner.xcworkspace" --scheme="Runner"
     artifacts:
-      - build_outputs/app-release.apk
-      - build_outputs/*.ipa
+      - build/ios/ipa/*.ipa

@@ -284,9 +284,9 @@ class _MusicPlayerScreenState extends State<MusicPlayerScreen> {
                       child: Text(
                         songs.isNotEmpty ? songs[currentIndex].split('/').last : 'No Song Playing',
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.bungee(
+                        style: GoogleFonts.merriweather(
                           fontSize: 22,
-                          fontWeight: FontWeight.bold,
+                          //fontWeight: FontWeight.bold,
                           color: Colors.white,
                           shadows: [
                             Shadow(
